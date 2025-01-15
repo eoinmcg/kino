@@ -1,0 +1,16 @@
+{
+  "name": "kino",
+  "version": "1.0.0",
+  "description": "mobile friendly rendering of local cinema listings",
+  "repository": "https://github.com/eoinmcg/kino",
+  "main": "app.js",
+  "author": "Eoin McGrath",
+  "license": "ISC",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^5.0.0"
+  }
+}

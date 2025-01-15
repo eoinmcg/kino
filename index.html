@@ -1,0 +1,144 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark" />
+<title>КИНО - Благоевград</title>
+<link
+rel="icon"
+href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍿</text></svg>"
+/>
+<style>
+
+@import url("https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css");
+header h1 { text-align: center; font-size: 400%; font-weight: normal; }
+
+.films article { border: 1px solid rgba(0,0,0,0.5); }
+.films article.active { border: 2px solid lime; }
+
+.films article a { text-decoration: none; font-weight: bold; }
+.films article ul { list-style: none; margin: 0; padding: 0; }
+.films article li { list-style: none; padding: .25rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.films article li:last-child { border-bottom: none; }
+
+footer { text-align: center; font-size: .7rem; padding: 1rem; }
+
+</style>
+
+</head>
+<body class="loading">
+
+    <header class="container">
+        <hgroup class="hero">
+        <h1>🍿КИНО</h1>
+      </hgroup>
+    </header>
+
+    <main class="container">
+      <div aria-busy="true" class="films"></div>
+    </main>
+
+    <footer>
+        <hr>
+      <p>by eoinmcg</p>
+    </footer>
+
+    <script>
+      fetch('timetable')
+        .then(response => {
+          return response.text()
+        })
+        .then(html => {
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(html, "text/html")
+          const mainDiv = doc.querySelector('[data-scraped]');
+          const scraped = mainDiv?.dataset?.scraped;
+          console.log(scraped, typeof(scraped), new Date(scraped));
+          const today = getToday();
+          const films = getFilms(doc);
+          const filmHtml = getFilmHtml(films, today);
+
+          const targetDiv = document.querySelector('.films');
+          document.body.classList.remove('loading');
+          targetDiv.removeAttribute('aria-busy');
+          targetDiv.classList.add('.slidein');
+          targetDiv.innerHTML = filmHtml;
+
+        })
+        .catch(error => {
+          console.error('Failed to fetch page: ', error)
+        })
+
+function getFilms(doc) {
+  let days = doc.querySelectorAll('#days');
+  let films = {};
+  days.forEach((day) => {
+    let dayName = day.innerText.trim().replace(' ', '-');
+    films[dayName] = [];
+    day.nextElementSibling.querySelectorAll('tr').forEach((row) => {
+      let raw = row.querySelectorAll('td');
+      films[dayName].push({
+        time: raw[0].innerText,
+        title: raw[1].innerText,
+        price: raw[2].innerText,
+      })
+    })
+  });
+
+  return films;
+}
+
+function getToday() {
+  const date = new Date();
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const yy = date.getFullYear().toString().slice(-2);
+  let mm = date.getMonth() + 1;
+  let dd = date.getDate();
+
+  if (dd < 10) dd = '0' + dd;
+  if (mm < 10) mm = '0' + mm;
+
+  return days[date.getDay()] + '-' + dd + '.' + mm + '.' + yy;
+
+}
+
+      function getFilmHtml(films, today) {
+
+        let html = '';
+        let link = 'https://rottentomatoes.com/search?search='
+        Object.keys(films).forEach((date) => {
+          let day = films[date];
+          let className = (date === today) ? ' class="active"' : '';
+
+          if (getTimeStamp(today) <= getTimeStamp(date)) {
+            html += `<article ${className} data-date="${date}">`;
+            html += `<h2>${date}</h2>`;
+            html += '<ul>';
+            day.forEach((film) => {
+              html += `<li>
+              <span class="time">${film.time}</span>
+              <a target="blank" href="${link}${film.title}">${film.title}</a>
+              <small>${film.price}</small>
+              </li>`;
+            })
+            html += '</ul>';
+            html += '</article>';
+          }
+
+        });
+
+        return html;
+      }
+
+      function getTimeStamp(date) {
+        let dateRaw = date.split('-')[1]
+                        .split('.')
+                        .slice(0,2)
+                        .reverse().join('/');
+        return new Date(dateRaw).getTime();
+      }
+
+    </script>
+  </body>
+</html>
