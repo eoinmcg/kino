@@ -22,12 +22,16 @@ header h1 { text-align: center; font-size: 400%; font-weight: normal; }
 .films article li { list-style: none; padding: .25rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .films article li:last-child { border-bottom: none; }
 
+#modal-details img { float: left; margin: 0 1rem 1rem 0; width: 200px; height: 287px; border: 1px solid #000; padding: 2px; }
+#modal-details a { text-decoration: none; }
+#modal-details footer {  display: block; clear: both; }
+
 footer { text-align: center; font-size: .7rem; padding: 1rem; }
 
 </style>
 
 </head>
-<body class="loading">
+<body class="">
 
     <header class="container">
         <hgroup class="hero">
@@ -37,6 +41,15 @@ footer { text-align: center; font-size: .7rem; padding: 1rem; }
 
     <main class="container">
       <div aria-busy="true" class="films"></div>
+      <dialog id="modal-details">
+          <article>
+            <h2>FILM TITLE</h2>
+            <p>DESC</p>
+            <footer>
+              <button class="close-modal secondary">Close</button>
+            </footer>
+          </article>
+        </dialog>
     </main>
 
     <footer>
@@ -45,7 +58,7 @@ footer { text-align: center; font-size: .7rem; padding: 1rem; }
     </footer>
 
     <script>
-      fetch('timetable')
+      fetch('/timetable')
         .then(response => {
           return response.text()
         })
@@ -54,7 +67,6 @@ footer { text-align: center; font-size: .7rem; padding: 1rem; }
           const doc = parser.parseFromString(html, "text/html")
           const mainDiv = doc.querySelector('[data-scraped]');
           const scraped = mainDiv?.dataset?.scraped;
-          console.log(scraped, typeof(scraped), new Date(scraped));
           const today = getToday();
           const films = getFilms(doc);
           const filmHtml = getFilmHtml(films, today);
@@ -62,9 +74,34 @@ footer { text-align: center; font-size: .7rem; padding: 1rem; }
           const targetDiv = document.querySelector('.films');
           document.body.classList.remove('loading');
           targetDiv.removeAttribute('aria-busy');
-          targetDiv.classList.add('.slidein');
+          targetDiv.classList.add('slidein');
           targetDiv.innerHTML = filmHtml;
 
+          const movies = getMoviesData(doc);
+
+          window.setTimeout(() => {
+            const modal = document.querySelector('#modal-details');
+            const links = document.querySelectorAll('a[data-target="modal-details"]')
+
+            links.forEach((link) => {
+              link.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  let movie = movies[e.target.innerText];
+                  modal.querySelector('h2').innerText = movie.title;
+                  modal.querySelector('p').innerHTML = `
+                    <img width="200" height="287" src="${movie.img}" /> ${movie.desc}
+                    <br />
+                    <a href="${e.target.href}" target="blank">More ></a>
+                    `;
+                  openModal(modal);
+                  return false;
+              }, false);
+            });
+
+            modal.querySelector('button').addEventListener('click', (e) => {
+              closeModal(modal);
+            })
+          }, 500);
         })
         .catch(error => {
           console.error('Failed to fetch page: ', error)
@@ -118,7 +155,7 @@ function getToday() {
             day.forEach((film) => {
               html += `<li>
               <span class="time">${film.time}</span>
-              <a target="blank" href="${link}${film.title}">${film.title}</a>
+              <a data-target="modal-details" target="blank" href="${link}${film.title}">${film.title}</a>
               <small>${film.price}</small>
               </li>`;
             })
@@ -131,6 +168,7 @@ function getToday() {
         return html;
       }
 
+
       function getTimeStamp(date) {
         let dateRaw = date.split('-')[1]
                         .split('.')
@@ -138,6 +176,111 @@ function getToday() {
                         .reverse().join('/');
         return new Date(dateRaw).getTime();
       }
+
+
+      function getMoviesData(doc) {
+
+        let descs = doc.querySelectorAll('.filmdescr');
+        let movies = {}
+        let base = window.location.href.split('/').slice(0, -1).join('/')+'/'
+        let cinemax = 'https://cinemaxbg.com/';
+
+          descs.forEach((f) => {
+            let rows = f.querySelectorAll('td');
+            let img = rows[0].querySelector('img').src.replace(base, cinemax)
+                        .replace('width=100', 'width=200')
+                        .replace('height=250', 'height=500');
+            let title = rows[1].querySelector('span.filmtitle').innerText.replace("'", '').trim();
+            let desc = rows[1].innerText.replace(title, '');
+            movies[title] = {
+              title: title,
+              desc: desc,
+              img: img
+            }
+          });
+
+        return movies;
+      }
+
+
+/*
+ * Modal
+ *
+ * Pico.css - https://picocss.com
+ * Copyright 2019-2024 - Licensed under MIT
+ */
+
+// Config
+const isOpenClass = "modal-is-open";
+const openingClass = "modal-is-opening";
+const closingClass = "modal-is-closing";
+const scrollbarWidthCssVar = "--pico-scrollbar-width";
+const animationDuration = 400; // ms
+let visibleModal = null;
+
+// Toggle modal
+const toggleModal = (event) => {
+  event.preventDefault();
+  const modal = document.getElementById(event.target.dataset.target);
+        console.log(modal, event);
+  if (!modal) return;
+  modal && (modal.open ? closeModal(modal) : openModal(modal));
+};
+
+// Open modal
+const openModal = (modal) => {
+  modal = modal || document.querySelector('#modal-details');
+  const { documentElement: html } = document;
+  const scrollbarWidth = getScrollbarWidth();
+  if (scrollbarWidth) {
+    html.style.setProperty(scrollbarWidthCssVar, `${scrollbarWidth}px`);
+  }
+  html.classList.add(isOpenClass, openingClass);
+  setTimeout(() => {
+    visibleModal = modal;
+    html.classList.remove(openingClass);
+  }, animationDuration);
+  modal.showModal();
+};
+
+// Close modal
+const closeModal = (modal) => {
+  modal = modal || document.querySelector('#modal-details');
+  visibleModal = null;
+  const { documentElement: html } = document;
+  html.classList.add(closingClass);
+  setTimeout(() => {
+    html.classList.remove(closingClass, isOpenClass);
+    html.style.removeProperty(scrollbarWidthCssVar);
+    modal.close();
+  }, animationDuration);
+};
+
+// Close with a click outside
+document.addEventListener("click", (event) => {
+  if (visibleModal === null) return;
+  const modalContent = visibleModal.querySelector("article");
+  const isClickInside = modalContent.contains(event.target);
+  !isClickInside && closeModal(visibleModal);
+});
+
+// Close with Esc key
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && visibleModal) {
+    closeModal(visibleModal);
+  }
+});
+
+// Get scrollbar width
+const getScrollbarWidth = () => {
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  return scrollbarWidth;
+};
+
+// Is scrollbar visible
+const isScrollbarVisible = () => {
+  return document.body.scrollHeight > screen.height;
+};
 
     </script>
   </body>

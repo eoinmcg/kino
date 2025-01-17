@@ -9,27 +9,37 @@ app.get('/', (req, res) => {
 });
 
 app.get('/timetable', (req, res) => {
+
+  const fs = require("fs");
   const cheerio = require("cheerio");
-  const url = 'https://cinemaxbg.com/timetable.php?lng=en';
 
-fetch(url)
-    .then(function (response) {
+  const urls = {
+      "timetable": "https://cinemaxbg.com/timetable.php?lng=en",
+      "movies": "https://cinemaxbg.com/?lng=en",
+  };
+
+  Promise.all([
+    fetch(urls.timetable),
+    fetch(urls.movies)
+  ]).then((responses) => {
+      return Promise.all(responses.map((response) => {
         return response.text();
-    })
-    .then(function (html) {
-        const $ = cheerio.load(html);
-       let timetable = $('table#timetable').html();
-        timetable = `<table data-scraped="${new Date().getTime()}">${timetable}</table>`;
-        res.type('html').send(timetable);
-    })
-    .catch(function (err) {
-        res.type('html').send(`<div class="error">${err}</div>`);
-    });
-
+      }));
+  }).then((data) => {
+      let html = `<div data-scraped="${new Date().getTime()}">`;
+      const $ = cheerio.load(data[0]);
+      html += '<table>' + $('table#timetable').html() + '</table>';
+      const $2 = cheerio.load(data[1]);
+      html += $2('body').html();
+      // fs.writeFileSync('timetable.html', html);
+      res.type('html').send(html);
+  }).catch((error) => {
+      console.log('error', error);
+  });
 });
 
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+const server = app.listen(port, () => console.log(`Kino app listening on port ${port}!`));
 
 server.keepAliveTimeout = 120 * 1000;
 server.headersTimeout = 120 * 1000;
