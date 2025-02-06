@@ -5,6 +5,10 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.get('/', (req, res) => {
+    const revision = require('child_process')
+      .execSync('git rev-parse HEAD')
+      .toString().trim();
+  console.log(revision);
     res.sendFile(path.join(__dirname, '/index.html'));
 });
 
@@ -25,9 +29,9 @@ app.get('/timetable', (req, res) => {
     hours = (diff / (1000 * 60 * 60)).toFixed(1);
   });
 
-  if (hours < 4) {
-    return res.sendFile(path.join(__dirname, '/timetable.html'));
-  }
+  // if (hours < 4) {
+  //   return res.sendFile(path.join(__dirname, '/timetable.html'));
+  // }
 
   const urls = {
       "timetable": "https://cinemaxbg.com/timetable.php?lng=en",
