@@ -17,18 +17,18 @@ app.get('/timetable', (req, res) => {
   const fs = require("fs");
   const cheerio = require("cheerio");
 
-  let hours = 0;
-  fs.stat('timetable.html', (err, stats) => {
-    if (err) {
-      throw err
-    }
-
-    let time = new Date(stats.mtime).getTime();
-    let now = new Date().getTime();
-    let diff = (((now - time) / 1000) / 60 / 60);
-    hours = (diff / (1000 * 60 * 60)).toFixed(1);
-  });
-
+  // let hours = 0;
+  // fs.stat('timetable.html', (err, stats) => {
+  //   if (err) {
+  //     throw err
+  //   }
+  //
+  //   let time = new Date(stats.mtime).getTime();
+  //   let now = new Date().getTime();
+  //   let diff = (((now - time) / 1000) / 60 / 60);
+  //   hours = (diff / (1000 * 60 * 60)).toFixed(1);
+  // });
+  //
   // if (hours < 4) {
   //   return res.sendFile(path.join(__dirname, '/timetable.html'));
   // }
