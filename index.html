@@ -1,16 +1,14 @@
   <!DOCTYPE html>
-<html lang="en">
+<html data-theme="dark" lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark" />
 <title>КИНО - Благоевград</title>
 <link
 rel="icon"
 href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍿</text></svg>"
 />
 <style>
-
 @import url("https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css");
 header h1 { text-align: center; font-size: 400%; font-weight: normal; }
 
@@ -27,12 +25,10 @@ header h1 { text-align: center; font-size: 400%; font-weight: normal; }
 #modal-details footer {  display: block; clear: both; }
 
 footer { text-align: center; font-size: .7rem; padding: 1rem; }
-
 </style>
-
 </head>
-<body class="">
 
+<body class="">
     <header class="container">
         <hgroup class="hero">
         <h1>🍿КИНО</h1>
@@ -126,22 +122,20 @@ function getFilms(doc) {
   return films;
 }
 
-function getToday() {
-  const date = new Date();
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const yy = date.getFullYear().toString().slice(-2);
-  let mm = date.getMonth() + 1;
-  let dd = date.getDate();
+      function getToday() {
+        const date = new Date();
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const yy = date.getFullYear().toString().slice(-2);
+        let mm = date.getMonth() + 1;
+        let dd = date.getDate();
 
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
 
-  return days[date.getDay()] + '-' + dd + '.' + mm + '.' + yy;
-
-}
+        return days[date.getDay()] + '-' + dd + '.' + mm + '.' + yy;
+      }
 
       function getFilmHtml(films, today) {
-
         let html = '';
         let link = 'https://rottentomatoes.com/search?search='
         Object.keys(films).forEach((date) => {
@@ -162,24 +156,20 @@ function getToday() {
             html += '</ul>';
             html += '</article>';
           }
-
         });
 
         return html;
       }
 
-
       function getTimeStamp(date) {
-        let dateRaw = date.split('-')[1]
-                        .split('.')
-                        .slice(0,2)
-                        .reverse().join('/');
-        return new Date(dateRaw).getTime();
+        let parts = date.split('-')[1].split('.');
+        let day = parts[0];
+        let month = parts[1];
+        let year = '20' + parts[2];  // Convert 25 to 2025
+        return new Date(`${year}-${month}-${day}`).getTime();
       }
 
-
       function getMoviesData(doc) {
-
         let descs = doc.querySelectorAll('.filmdescr');
         let movies = {}
         let base = window.location.href.split('/').slice(0, -1).join('/')+'/'
@@ -201,7 +191,6 @@ function getToday() {
 
         return movies;
       }
-
 
 /*
  * Modal
@@ -243,7 +232,6 @@ const openModal = (modal) => {
   modal.showModal();
 };
 
-// Close modal
 const closeModal = (modal) => {
   modal = modal || document.querySelector('#modal-details');
   visibleModal = null;
@@ -281,7 +269,6 @@ const getScrollbarWidth = () => {
 const isScrollbarVisible = () => {
   return document.body.scrollHeight > screen.height;
 };
-
     </script>
   </body>
 </html>
