@@ -105,6 +105,7 @@ footer { text-align: center; font-size: .7rem; padding: 1rem; }
 
 function getFilms(doc) {
   let days = doc.querySelectorAll('#days');
+        
   let films = {};
   days.forEach((day) => {
     let dayName = day.innerText.trim().replace(' ', '-');
