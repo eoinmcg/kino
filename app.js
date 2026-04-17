@@ -9,8 +9,8 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let cachedTimetable = { html: null, timestamp: 0 };
 
 const URLS = {
-  timetable: "https://cinemaxbg.com/timetable.php?lng=en",
-  movies: "https://cinemaxbg.com/?lng=en",
+  timetable: "http://cinemaxbg.com/timetable.php?lng=en",
+  movies: "http://cinemaxbg.com/?lng=en",
 };
 
 app.get("/", (req, res) => {
@@ -55,7 +55,7 @@ app.get("/timetable", async (req, res) => {
 
     res.type("html").send(html);
   } catch (error) {
-    console.error("Scraping error:", error.message);
+    console.error("Scraping error:", error.message, URLS);
     res
       .status(503)
       .send("Cinema data temporarily unavailable. Please try again later.");
